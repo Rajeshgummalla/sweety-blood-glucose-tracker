@@ -28,10 +28,10 @@ Built with **Node.js + Express**, **PostgreSQL**, and **React (Vite + Tailwind C
 ---
 
 ## 🖼️ Preview
-![Dashboard Preview](./client/dist/assets/dashboard.png)
-![Product Management](./client/dist/assets/report_daily.png)
-![Add Product](./client/dist/assets/report_monthly.png)
-![Product Analytics](./client/dist/assets/about_my_project_screenrecording.mp4)
+![Dashboard Preview](./client/src/pubilc/images/dashboard.png)
+![Product Management](./client/src/pubilc/images/report_daily.png)
+![Add Product](./client/src/pubilc/images/report_monthly.png)
+![Product Analytics](./client/src/pubilc/images/about_my_project_screenrecording.mp4)
 
 ## Features
 
