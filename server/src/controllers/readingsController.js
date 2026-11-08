@@ -56,13 +56,13 @@ const slotOrderSql = `
 `;
 
 /**
- * GET /api/readings
- * Supports pagination ?page=1&limit=20 and filtering by date / range
+ * GET /api/readings or GET /readings
+ * Supports pagination ?page=1&limit=20 (defaults to page=1, limit=20) and filtering by date / range
  */
 exports.getReadings = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { date, startDate, endDate, page, limit } = req.query;
+    const { date, startDate, endDate, page, limit, all } = req.query;
 
     const conditions = ['user_id = $1'];
     const params = [userId];
@@ -104,32 +104,43 @@ exports.getReadings = async (req, res) => {
       ORDER BY reading_date DESC, ${slotOrderSql} ASC
     `;
 
-    // Pagination
-    let currentPage = null;
-    let currentLimit = null;
+    const isAll = all === 'true' || limit === 'all';
+    let currentPage = 1;
+    let currentLimit = 20;
     let totalPages = 1;
+    const queryParams = [...params];
 
-    if (page || limit) {
-      currentPage = Math.max(1, parseInt(page, 10) || 1);
-      currentLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+    if (!isAll) {
+      const parsedPage = parseInt(page, 10);
+      const parsedLimit = parseInt(limit, 10);
+
+      currentPage = Number.isInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+      currentLimit = Number.isInteger(parsedLimit) && parsedLimit > 0
+        ? Math.min(100, Math.max(1, parsedLimit))
+        : 20;
+
       const offset = (currentPage - 1) * currentLimit;
-      totalPages = Math.ceil(total / currentLimit) || 1;
+      totalPages = total > 0 ? Math.ceil(total / currentLimit) : 1;
 
-      params.push(currentLimit);
-      queryText += ` LIMIT $${params.length}`;
-      params.push(offset);
-      queryText += ` OFFSET $${params.length}`;
+      queryParams.push(currentLimit);
+      queryText += ` LIMIT $${queryParams.length}`;
+      queryParams.push(offset);
+      queryText += ` OFFSET $${queryParams.length}`;
+    } else {
+      currentLimit = total;
     }
 
-    const result = await db.query(queryText, params);
+    const result = await db.query(queryText, queryParams);
 
     return res.status(200).json({
       readings: result.rows,
       pagination: {
         total,
-        page: currentPage || 1,
-        limit: currentLimit || total,
+        page: currentPage,
+        limit: currentLimit,
         totalPages,
+        hasPrevPage: currentPage > 1,
+        hasNextPage: currentPage < totalPages,
       },
     });
   } catch (err) {
