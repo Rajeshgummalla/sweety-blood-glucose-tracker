@@ -82,7 +82,7 @@ Built with **Node.js + Express**, **PostgreSQL**, and **React (Vite + Tailwind C
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/sweety-blood-glucose-tracker.git
+git clone https://github.com/Rajeshgummalla/sweety-blood-glucose-tracker.git
 cd sweety-blood-glucose-tracker
 ```
 
