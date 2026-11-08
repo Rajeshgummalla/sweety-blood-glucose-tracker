@@ -367,6 +367,50 @@ describe('4. Reports & Statistics', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.readings).toHaveLength(2);
     expect(res.body.pagination.total).toBe(4);
+    expect(res.body.pagination.page).toBe(1);
+    expect(res.body.pagination.limit).toBe(2);
     expect(res.body.pagination.totalPages).toBe(2);
+    expect(res.body.pagination.hasNextPage).toBe(true);
+    expect(res.body.pagination.hasPrevPage).toBe(false);
+  });
+
+  test('Pagination bonus: GET /api/readings?page=2&limit=2 fetches second page', async () => {
+    const res = await request(app)
+      .get('/api/readings?page=2&limit=2')
+      .set('Authorization', `Bearer ${tokenUserA}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.readings).toHaveLength(2);
+    expect(res.body.pagination.total).toBe(4);
+    expect(res.body.pagination.page).toBe(2);
+    expect(res.body.pagination.totalPages).toBe(2);
+    expect(res.body.pagination.hasNextPage).toBe(false);
+    expect(res.body.pagination.hasPrevPage).toBe(true);
+  });
+
+  test('Pagination on GET /readings (?page=1&limit=20)', async () => {
+    const res = await request(app)
+      .get('/readings?page=1&limit=20')
+      .set('Authorization', `Bearer ${tokenUserA}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.readings).toHaveLength(4);
+    expect(res.body.pagination.total).toBe(4);
+    expect(res.body.pagination.page).toBe(1);
+    expect(res.body.pagination.limit).toBe(20);
+    expect(res.body.pagination.totalPages).toBe(1);
+  });
+
+  test('Pagination on GET /readings defaults to page=1 and limit=20 when omitted', async () => {
+    const res = await request(app)
+      .get('/readings')
+      .set('Authorization', `Bearer ${tokenUserA}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.readings).toHaveLength(4);
+    expect(res.body.pagination.total).toBe(4);
+    expect(res.body.pagination.page).toBe(1);
+    expect(res.body.pagination.limit).toBe(20);
+    expect(res.body.pagination.totalPages).toBe(1);
   });
 });

@@ -17,6 +17,7 @@ import {
   ArrowDownRight,
   Hash,
   Clock,
+  ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 
@@ -25,6 +26,8 @@ export default function ReportsPage({ selectedDate, setSelectedDate, onOpenAddMo
   const [reportsData, setReportsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_LIMIT = 20;
 
   const todayStr = formatToDateInput();
 
@@ -45,6 +48,10 @@ export default function ReportsPage({ selectedDate, setSelectedDate, onOpenAddMo
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeReportTab, selectedDate]);
 
   const dailyReport = reportsData?.daily || { count: 0, highest: null, lowest: null, average: null, readings: [] };
   const mtdReport = reportsData?.monthToDate || { count: 0, highest: null, lowest: null, average: null, readings: [] };
@@ -276,60 +283,123 @@ export default function ReportsPage({ selectedDate, setSelectedDate, onOpenAddMo
           )}
 
           {/* Month Summary Table for Month-to-date and Monthly */}
-          {activeReportTab !== 'daily' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
-                <div>
-                  <h3 className="text-base font-semibold text-slate-900">Period Readings Log</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Chronological record for {activeReport.rangeDescription}
-                  </p>
-                </div>
-                <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
-                  {activeReport.data.count} Total Readings
-                </span>
-              </div>
+          {activeReportTab !== 'daily' && (() => {
+            const readingsList = activeReport.data.readings || [];
+            const totalReadings = readingsList.length;
+            const totalPages = Math.ceil(totalReadings / PAGE_LIMIT) || 1;
+            const safePage = Math.min(Math.max(1, currentPage), totalPages);
+            const startIndex = totalReadings === 0 ? 0 : (safePage - 1) * PAGE_LIMIT;
+            const paginatedReadings = readingsList.slice(startIndex, startIndex + PAGE_LIMIT);
+            const startDisplay = totalReadings === 0 ? 0 : startIndex + 1;
+            const endDisplay = Math.min(startIndex + PAGE_LIMIT, totalReadings);
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      <th className="pb-3 px-3">Date</th>
-                      <th className="pb-3 px-3">Slot</th>
-                      <th className="pb-3 px-3">Status</th>
-                      <th className="pb-3 px-3 text-right">Glucose Value</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {activeReport.data.readings.map((r) => {
-                      const status = getGlucoseStatus(r.value);
-                      const slotMeta = SLOT_INFO[r.slot] || {};
-                      return (
-                        <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3 font-medium text-slate-800">
-                            {formatDisplayDate(r.reading_date)}
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${slotMeta.color}`}>
-                              {r.slot}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full border ${status.bgClass}`}>
-                              {status.label}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 text-right font-bold text-slate-900">
-                            {r.value} <span className="text-xs font-normal text-slate-400">mg/dl</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+            return (
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-900">Period Readings Log</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Chronological record for {activeReport.rangeDescription}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                      {totalReadings} Total Readings
+                    </span>
+                    {totalPages > 1 && (
+                      <span className="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
+                        Page {safePage} of {totalPages}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        <th className="pb-3 px-3">Date</th>
+                        <th className="pb-3 px-3">Slot</th>
+                        <th className="pb-3 px-3">Status</th>
+                        <th className="pb-3 px-3 text-right">Glucose Value</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {paginatedReadings.map((r) => {
+                        const status = getGlucoseStatus(r.value);
+                        const slotMeta = SLOT_INFO[r.slot] || {};
+                        return (
+                          <tr key={r.id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-2.5 px-3 font-medium text-slate-800">
+                              {formatDisplayDate(r.reading_date)}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${slotMeta.color}`}>
+                                {r.slot}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full border ${status.bgClass}`}>
+                                {status.label}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                              {r.value} <span className="text-xs font-normal text-slate-400">mg/dl</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 mt-3 border-t border-slate-100 text-xs">
+                    <p className="text-slate-500">
+                      Showing <span className="font-semibold text-slate-800">{startDisplay}</span> to{' '}
+                      <span className="font-semibold text-slate-800">{endDisplay}</span> of{' '}
+                      <span className="font-semibold text-slate-800">{totalReadings}</span> readings
+                    </p>
+
+                    <div className="flex items-center space-x-1.5 self-end sm:self-auto">
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={safePage <= 1}
+                        className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                        <span>Previous</span>
+                      </button>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((num) => (
+                        <button
+                          key={num}
+                          onClick={() => setCurrentPage(num)}
+                          className={`w-7 h-7 rounded-lg font-medium transition-colors ${
+                            num === safePage
+                              ? 'bg-rose-600 text-white font-semibold shadow-xs'
+                              : 'text-slate-600 hover:bg-slate-100 border border-slate-200'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safePage >= totalPages}
+                        className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <span>Next</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
         </>
       )}
     </div>

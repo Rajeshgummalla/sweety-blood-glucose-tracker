@@ -21,14 +21,17 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get(['/health', '/api/health'], (req, res) => {
   res.status(200).json({ status: 'ok', service: 'Sweety API', timestamp: new Date().toISOString() });
 });
 
-// API Routes
+// API Routes (supports both /api/readings and /readings paths)
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 app.use('/api/readings', readingsRoutes);
+app.use('/readings', readingsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/reports', reportsRoutes);
 
 // 404 handler
 app.use((req, res) => {
