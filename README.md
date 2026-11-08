@@ -27,6 +27,12 @@ Built with **Node.js + Express**, **PostgreSQL**, and **React (Vite + Tailwind C
 
 ---
 
+## 🖼️ Preview
+![Dashboard Preview](./client/dist/assets/dashboard.png)
+![Product Management](./client/dist/assets/report_daily.png)
+![Add Product](./client/dist/assets/report_monthly.png)
+![Product Analytics](./client/dist/assets/about_my_project_screenrecording.mp4)
+
 ## Features
 
 ### 1. Authentication & Security
