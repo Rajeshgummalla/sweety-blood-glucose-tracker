@@ -282,6 +282,10 @@ sweety-blood-glucose-tracker/
 
 ---
 
+# If i Had More Time
+
+---
+
 ## Developer Notes & Assumptions
 
 A few candid notes on the decisions made while building Sweety:
@@ -308,3 +312,4 @@ A few candid notes on the decisions made while building Sweety:
    - **Insulin & Carb Logging**: While glucose is the primary number, attaching rapid-acting insulin units or a brief meal note (e.g. "oatmeal + berries") gives doctors much better context for unexpected spikes.
    - **PWA / Offline Support**: Adding a Service Worker and IndexedDB queue so patients can log readings even when they are offline on a flight or in low-signal areas, syncing once reconnected.
    - **Redis Report Caching**: Caching monthly report aggregates for long date spans, using a cache tag invalidated whenever a reading is added, modified, or deleted for that user.
+ 
